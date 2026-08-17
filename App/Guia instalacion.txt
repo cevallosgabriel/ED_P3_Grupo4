@@ -1,0 +1,5 @@
+-----------------------------------------------------------------------------------
+*Activar descarga de fuentes desconocidas
+*Intalar sin analizar
+(Pueden haber errores por la versión de Android inferiores a 14 o falta de permisos)
+------------------------------------------------------------------------------------
