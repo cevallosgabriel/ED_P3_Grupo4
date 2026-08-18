@@ -9,7 +9,7 @@ Integrates:
 <table>
   <tr>
     <td width="50%">Video1:Distribución de temas</td>
-    <td width="50%">youtube.com</td>
+    <td width="50%">[Evidencia 1](youtube.com)</td>
   </tr>
 </table>
 
