@@ -1,16 +1,20 @@
 package com.espol.proyectoestruturadatos;
 
+import com.espol.proyectoestruturadatos.dstructure.Minimax;
 import com.espol.proyectoestruturadatos.model.board.Board;
 import com.espol.proyectoestruturadatos.model.board.Box;
 import com.espol.proyectoestruturadatos.model.board.Symbol;
 import controller.BoardController;
 import controller.MainController;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
@@ -19,9 +23,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,6 +32,8 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Cevallos Guzman Gabriel Abraham.
@@ -52,104 +57,135 @@ public class ProyectoFX extends Application {
     private RadioButton rbStartHuman;
     private RadioButton rbStartBot;
 
+    private CheckBox chkRecorrido;
+    private CheckBox chkSugerencias;
+    private CheckBox chkResaltado;
+
+    private boolean isBotThinking = false;
+    private int suggestedCellIndex = -1;
+
     public static void main(String[] args) {
         launch(args);
     }
-
+    
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("Tres en Raya vs Computador");
+        primaryStage.setTitle("Tres en Raya");
         mainController = new MainController();
 
         BorderPane root = new BorderPane();
-        root.setPadding(new Insets(15));
 
-        VBox topBox = new VBox(12);
-        topBox.setAlignment(Pos.CENTER);
-
+        VBox headerBanner = new VBox();
+        headerBanner.getStyleClass().add("header-banner");
         Label titleLabel = new Label("TRES EN RAYA");
-        titleLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 22));
+        titleLabel.getStyleClass().add("title-text");
+        headerBanner.getChildren().add(titleLabel);
+        root.setTop(headerBanner);
+
+        VBox contentBox = new VBox(14);
+        contentBox.setAlignment(Pos.CENTER);
+        contentBox.setPadding(new Insets(16));
+
+        VBox configCard = new VBox(10);
+        configCard.setAlignment(Pos.CENTER);
+        configCard.getStyleClass().add("card-container");
 
         Label nameLabel = new Label("Jugador:");
-        nameLabel.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 13));
+        nameLabel.getStyleClass().add("label-bold");
         txtPlayerName = new TextField("JaHeGa");
-        txtPlayerName.setPrefWidth(160);
+        txtPlayerName.setPrefWidth(150);
         txtPlayerName.setPromptText("Ingrese su nombre");
-        txtPlayerName.setFont(Font.font("Segoe UI", 13));
+        txtPlayerName.getStyleClass().add("text-field-custom");
 
         HBox nameBox = new HBox(8, nameLabel, txtPlayerName);
         nameBox.setAlignment(Pos.CENTER);
 
         Label symbolLabel = new Label("Tu Ficha:");
-        symbolLabel.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 13));
+        symbolLabel.getStyleClass().add("label-bold");
 
         ToggleGroup symbolGroup = new ToggleGroup();
         rbHumanX = new RadioButton("X");
         rbHumanX.setToggleGroup(symbolGroup);
         rbHumanX.setSelected(true);
-        rbHumanX.setFont(Font.font("Segoe UI", 12));
 
         rbHumanO = new RadioButton("O");
         rbHumanO.setToggleGroup(symbolGroup);
-        rbHumanO.setFont(Font.font("Segoe UI", 12));
 
         HBox symbolBox = new HBox(8, symbolLabel, rbHumanX, rbHumanO);
         symbolBox.setAlignment(Pos.CENTER);
 
         Label turnLabel = new Label("Inicia:");
-        turnLabel.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 13));
+        turnLabel.getStyleClass().add("label-bold");
 
         ToggleGroup turnGroup = new ToggleGroup();
         rbStartHuman = new RadioButton("Humano");
         rbStartHuman.setToggleGroup(turnGroup);
         rbStartHuman.setSelected(true);
-        rbStartHuman.setFont(Font.font("Segoe UI", 12));
 
         rbStartBot = new RadioButton("Computadora");
         rbStartBot.setToggleGroup(turnGroup);
-        rbStartBot.setFont(Font.font("Segoe UI", 12));
 
         HBox turnBox = new HBox(8, turnLabel, rbStartHuman, rbStartBot);
         turnBox.setAlignment(Pos.CENTER);
 
-        Button btnNewGame = new Button("Nueva Partida");
-        btnNewGame.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
+        configCard.getChildren().addAll(nameBox, symbolBox, turnBox);
+
+        VBox actionCard = new VBox();
+        actionCard.setAlignment(Pos.CENTER);
+        actionCard.getStyleClass().add("card-container");
+
+        Button btnNewGame = new Button("NUEVA");
+        btnNewGame.getStyleClass().add("button-secondary");
         btnNewGame.setOnAction(e -> restartGame());
 
-        Button btnSave = new Button("Guardar Partida");
-        btnSave.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
+        Button btnUndo = new Button("DESHACER");
+        btnUndo.getStyleClass().add("button-secondary");
+        btnUndo.setOnAction(e -> undoLastMovements());
+
+        Button btnSave = new Button("GUARDAR");
+        btnSave.getStyleClass().add("button-primary");
         btnSave.setOnAction(e -> manualSaveGame());
 
-        Button btnLoad = new Button("Reanudar Partida");
-        btnLoad.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12));
+        Button btnLoad = new Button("REANUDAR");
+        btnLoad.getStyleClass().add("button-secondary");
         btnLoad.setOnAction(e -> loadSavedGame());
 
-        HBox actionBox = new HBox(10, btnNewGame, btnSave, btnLoad);
+        HBox actionBox = new HBox(8, btnNewGame, btnUndo, btnSave, btnLoad);
         actionBox.setAlignment(Pos.CENTER);
+        actionCard.getChildren().add(actionBox);
 
-        topBox.getChildren().addAll(titleLabel, nameBox, symbolBox, turnBox, actionBox);
-        root.setTop(topBox);
+        chkRecorrido = new CheckBox("Recorrido");
+        chkRecorrido.getStyleClass().add("check-box");
+        chkRecorrido.setSelected(true);
 
-        VBox centerBox = new VBox(15);
-        centerBox.setAlignment(Pos.CENTER);
-        centerBox.setPadding(new Insets(10, 0, 10, 0));
+        chkSugerencias = new CheckBox("Sugerencias");
+        chkSugerencias.getStyleClass().add("check-box");
+        chkSugerencias.setSelected(true);
+        chkSugerencias.setOnAction(e -> updateBoardUI());
 
-        statusLabel = new Label("Easter egg:Ap desde matricula");
-        statusLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 15));
-        statusLabel.setStyle("-fx-text-fill: #333333;");
+        chkResaltado = new CheckBox("Resaltado");
+        chkResaltado.getStyleClass().add("check-box");
+        chkResaltado.setSelected(true);
+        chkResaltado.setOnAction(e -> updateBoardUI());
+
+        HBox optionsBox = new HBox(16, chkRecorrido, chkSugerencias, chkResaltado);
+        optionsBox.setAlignment(Pos.CENTER);
+        optionsBox.getStyleClass().add("options-box");
+
+        statusLabel = new Label("Selecciona tus opciones e inicia el juego.");
+        statusLabel.getStyleClass().add("status-badge");
 
         boardGrid = new GridPane();
         boardGrid.setAlignment(Pos.CENTER);
-        boardGrid.setHgap(8);
-        boardGrid.setVgap(8);
+        boardGrid.setHgap(10);
+        boardGrid.setVgap(10);
 
         cellButtons = new Button[9];
         for (int i = 0; i < 9; i++) {
             final int index = i;
             Button btn = new Button("");
-            btn.setPrefSize(105, 105);
-            btn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 36));
-            btn.setStyle("-fx-background-color: #FFFFFF; -fx-border-color: #B0BEC5; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand;");
+            btn.setPrefSize(100, 100);
+            btn.getStyleClass().add("cell-button-empty");
             btn.setOnAction(e -> handleCellClick(index));
             cellButtons[i] = btn;
 
@@ -158,10 +194,15 @@ public class ProyectoFX extends Application {
             boardGrid.add(btn, col, row);
         }
 
-        centerBox.getChildren().addAll(statusLabel, boardGrid);
-        root.setCenter(centerBox);
+        contentBox.getChildren().addAll(configCard, actionCard, optionsBox, statusLabel, boardGrid);
+        root.setCenter(contentBox);
 
-        Scene scene = new Scene(root, 520, 680);
+        Scene scene = new Scene(root, 560, 720);
+        try {
+            scene.getStylesheets().add(getClass().getResource("/com/espol/proyectoestruturadatos/css/styles.css").toExternalForm());
+        } catch (Exception ex) {
+        }
+
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.show();
@@ -179,39 +220,175 @@ public class ProyectoFX extends Application {
         boolean humanStarts = rbStartHuman.isSelected();
 
         mainController.startNewGame(isHumanX, humanStarts);
+        suggestedCellIndex = -1;
         updateBoardUI();
 
         if (!humanStarts) {
-            updateBoardUI();
-            if (!checkGameOver()) {
-                statusLabel.setText("La Computadora inició la partida. Turno de " + getPlayerName() + " (" + mainController.getChooseController().getHumanSymbol() + ")");
-            }
+            triggerBotTurn();
         } else {
             statusLabel.setText("Turno de " + getPlayerName() + " (" + mainController.getChooseController().getHumanSymbol() + ")");
+            calculateHumanSuggestion();
         }
     }
 
     private void restartGame() {
+        if (isBotThinking) return;
         startFirstGame();
     }
 
-    private void handleCellClick(int index) {
-        if (mainController.getBoardController() == null || mainController.getBoardController().isGameOver()) {
+    private void undoLastMovements() {
+        if (isBotThinking || mainController.getBoardController() == null) {
             return;
         }
 
-        boolean moved = mainController.getBoardController().makeHumanMove(index);
-        if (moved) {
+        if (!mainController.getBoardController().canUndo()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Deshacer Movimiento");
+            alert.setHeaderText(null);
+            alert.setContentText("No hay suficientes movimientos para deshacer.");
+            alert.showAndWait();
+            return;
+        }
+
+        boolean undone = mainController.undoLastTwoMoves();
+        if (undone) {
+            suggestedCellIndex = -1;
+            updateBoardUI();
+            autoSaveGame();
+            statusLabel.setText("Movimientos deshechos. Turno de " + getPlayerName() + " (" + mainController.getChooseController().getHumanSymbol() + ")");
+            calculateHumanSuggestion();
+        }
+    }
+
+    private void handleCellClick(int index) {
+        if (isBotThinking || mainController.getBoardController() == null || mainController.getBoardController().isGameOver()) {
+            return;
+        }
+
+        if (!mainController.getBoardController().isHumanTurn()) {
+            return;
+        }
+
+        Board board = mainController.getBoardController().getBoard();
+        if (board.boxes[index].isEmpty()) {
+            boolean moved = mainController.getBoardController().makeHumanMove(index);
+            if (moved) {
+                suggestedCellIndex = -1;
+                updateBoardUI();
+                autoSaveGame();
+                if (!checkGameOver()) {
+                    triggerBotTurn();
+                }
+            }
+        }
+    }
+
+    private void triggerBotTurn() {
+        if (chkRecorrido.isSelected()) {
+            executeVisualBotMove();
+        } else {
+            mainController.getBoardController().executeBotMove();
             updateBoardUI();
             autoSaveGame();
             if (!checkGameOver()) {
                 statusLabel.setText("Turno de " + getPlayerName() + " (" + mainController.getChooseController().getHumanSymbol() + ")");
+                calculateHumanSuggestion();
+            }
+        }
+    }
+
+    private void calculateHumanSuggestion() {
+        if (chkSugerencias.isSelected() && mainController.getBoardController() != null && !mainController.getBoardController().isGameOver()) {
+            Board board = mainController.getBoardController().getBoard();
+            Symbol humanSymbol = mainController.getChooseController().getHumanSymbol();
+            Symbol botSymbol = mainController.getChooseController().getBotSymbol();
+
+            int bestMove = Minimax.getBestMoveForHuman(board, humanSymbol, botSymbol);
+            if (bestMove != -1) {
+                suggestedCellIndex = bestMove;
+                updateBoardUI();
+                int row = (bestMove / 3) + 1;
+                int col = (bestMove % 3) + 1;
+                statusLabel.setText("Sugerencia: Fila " + row + ", Columna " + col);
+            }
+        }
+    }
+
+    private void executeVisualBotMove() {
+        if (mainController.getBoardController() == null || mainController.getBoardController().isGameOver()) {
+            return;
+        }
+
+        Board board = mainController.getBoardController().getBoard();
+        List<Integer> availableMoves = board.getAvailableMovements();
+        if (availableMoves.isEmpty()) {
+            return;
+        }
+
+        isBotThinking = true;
+        setButtonsEnabled(false);
+        statusLabel.setText("Evaluando opciones con Minimax...");
+
+        Symbol botSymbol = mainController.getChooseController().getBotSymbol();
+        Symbol humanSymbol = mainController.getChooseController().getHumanSymbol();
+        int bestMove = Minimax.getBestMove(board, botSymbol, humanSymbol);
+
+        Timeline timeline = new Timeline();
+        int stepDelayMs = 350;
+        int timeOffsetMs = 0;
+
+        for (int cellIndex : availableMoves) {
+            final int targetCell = cellIndex;
+            timeOffsetMs += stepDelayMs;
+
+            timeline.getKeyFrames().add(new KeyFrame(Duration.millis(timeOffsetMs), e -> {
+                cellButtons[targetCell].getStyleClass().setAll("cell-button-evaluating");
+                statusLabel.setText("Evaluando casilla " + targetCell + "...");
+            }));
+
+            if (targetCell != bestMove) {
+                timeOffsetMs += stepDelayMs;
+                timeline.getKeyFrames().add(new KeyFrame(Duration.millis(timeOffsetMs), e -> {
+                    cellButtons[targetCell].getStyleClass().setAll("cell-button-rejected");
+                    statusLabel.setText("Camino descartado en casilla " + targetCell + ". Regresando...");
+                }));
+            }
+        }
+
+        timeOffsetMs += stepDelayMs;
+        timeline.getKeyFrames().add(new KeyFrame(Duration.millis(timeOffsetMs), e -> {
+            cellButtons[bestMove].getStyleClass().setAll("cell-button-selected");
+            statusLabel.setText("Camino óptimo seleccionado en casilla " + bestMove);
+        }));
+
+        timeOffsetMs += 500;
+        timeline.getKeyFrames().add(new KeyFrame(Duration.millis(timeOffsetMs), e -> {
+            mainController.getBoardController().executeBotMove();
+            updateBoardUI();
+            autoSaveGame();
+            isBotThinking = false;
+            setButtonsEnabled(true);
+
+            if (!checkGameOver()) {
+                statusLabel.setText("Turno de " + getPlayerName() + " (" + humanSymbol + ")");
+                calculateHumanSuggestion();
+            }
+        }));
+
+        timeline.play();
+    }
+
+    private void setButtonsEnabled(boolean enabled) {
+        for (Button btn : cellButtons) {
+            if (btn != null) {
+                btn.setDisable(!enabled);
             }
         }
     }
 
     private boolean checkGameOver() {
         if (mainController.getBoardController() != null && mainController.getBoardController().isGameOver()) {
+            suggestedCellIndex = -1;
             updateBoardUI();
             autoSaveGame();
 
@@ -234,20 +411,43 @@ public class ProyectoFX extends Application {
         if (mainController.getBoardController() == null) return;
 
         Board board = mainController.getBoardController().getBoard();
+        Symbol winnerSymbol = board.getWinner();
+        int[] winningLine = (chkResaltado.isSelected()) ? board.getWinningLineIndices(winnerSymbol) : null;
+
         for (int i = 0; i < 9; i++) {
             Box box = board.boxes[i];
             Button btn = cellButtons[i];
 
-            if (box == null || box.isEmpty()) {
-                btn.setText("");
-                btn.setStyle("-fx-background-color: #FFFFFF; -fx-border-color: #B0BEC5; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8; ");
+            boolean isWinningCell = false;
+            if (winningLine != null) {
+                for (int wIdx : winningLine) {
+                    if (wIdx == i) {
+                        isWinningCell = true;
+                        break;
+                    }
+                }
+            }
+
+            btn.getStyleClass().clear();
+
+            if (isWinningCell) {
+                btn.getStyleClass().add("cell-button-winning");
+                btn.setText(box.getSymbol().toString());
+            } else if (box == null || box.isEmpty()) {
+                if (i == suggestedCellIndex && chkSugerencias.isSelected() && mainController.getBoardController().isHumanTurn()) {
+                    btn.getStyleClass().add("cell-button-hint");
+                    btn.setText("");
+                } else {
+                    btn.getStyleClass().add("cell-button-empty");
+                    btn.setText("");
+                }
             } else {
                 Symbol s = box.getSymbol();
                 btn.setText(s.toString());
                 if (s.equals(Symbol.X)) {
-                    btn.setStyle("-fx-background-color: #E3F2FD; -fx-text-fill: #1E88E5; -fx-border-color: #90CAF9; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;");
+                    btn.getStyleClass().add("cell-button-x");
                 } else {
-                    btn.setStyle("-fx-background-color: #FFEBEE; -fx-text-fill: #E53935; -fx-border-color: #EF9A9A; -fx-border-width: 2; -fx-border-radius: 8; -fx-background-radius: 8;");
+                    btn.getStyleClass().add("cell-button-o");
                 }
             }
         }
@@ -267,7 +467,7 @@ public class ProyectoFX extends Application {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Partida Guardada");
             alert.setHeaderText(null);
-            alert.setContentText("¡Partida de " + getPlayerName() + " guardada exitosamente!\nUbicación: " + file.getAbsolutePath());
+            alert.setContentText("Partida de " + getPlayerName() + " guardada exitosamente.\nUbicación: " + file.getAbsolutePath());
             alert.showAndWait();
         }
     }
@@ -282,6 +482,7 @@ public class ProyectoFX extends Application {
             data.humanStarts = rbStartHuman.isSelected();
             data.isHumanTurn = mainController.getBoardController().isHumanTurn();
             data.hasEnded = mainController.getBoardController().getBoard().hasEnded;
+            data.moveHistory = new ArrayList<>(mainController.getBoardController().getMoveHistory());
 
             Board board = mainController.getBoardController().getBoard();
             for (int i = 0; i < 9; i++) {
@@ -300,7 +501,7 @@ public class ProyectoFX extends Application {
             if (showErrors) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error al Guardar");
-                alert.setHeaderText("F no se pudimos guardar la partida");
+                alert.setHeaderText("No se pudo guardar la partida");
                 alert.setContentText(ex.getMessage());
                 alert.showAndWait();
             }
@@ -315,16 +516,27 @@ public class ProyectoFX extends Application {
         }
 
         if (!file.exists()) {
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Sin Partida Guardada");
+            restartGame();
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Reanudar Partida");
             alert.setHeaderText(null);
-            alert.setContentText("No se encontró ningún archivo de partida guardada.");
+            alert.setContentText("No hay partida guardada previa. Se inició una nueva partida vacía.");
             alert.showAndWait();
             return;
         }
 
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
             GameSaveData data = (GameSaveData) ois.readObject();
+
+            if (data == null) {
+                restartGame();
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Reanudar Partida");
+                alert.setHeaderText(null);
+                alert.setContentText("No hay partida guardada previa. Se inició una nueva partida vacía.");
+                alert.showAndWait();
+                return;
+            }
 
             txtPlayerName.setText(data.playerName);
             rbHumanX.setSelected(data.isHumanX);
@@ -338,6 +550,9 @@ public class ProyectoFX extends Application {
 
             BoardController restoredBc = new BoardController(humanSymbol, botSymbol, true);
             restoredBc.setHumanTurn(data.isHumanTurn);
+            if (data.moveHistory != null) {
+                restoredBc.setMoveHistory(data.moveHistory);
+            }
 
             Board board = restoredBc.getBoard();
             board.hasEnded = data.hasEnded;
@@ -363,33 +578,31 @@ public class ProyectoFX extends Application {
             }
 
             mainController.setBoardController(restoredBc);
+            suggestedCellIndex = -1;
             updateBoardUI();
 
             if (data.hasEnded) {
                 statusLabel.setText("Partida Reanudada (Finalizada)");
             } else if (data.isHumanTurn) {
-                statusLabel.setText("Partida Reanudada. Turno de " + getPlayerName() 
-                        + " (" + humanSymbol + ")");
+                statusLabel.setText("Partida Reanudada. Turno de " + getPlayerName() + " (" + humanSymbol + ")");
+                calculateHumanSuggestion();
             } else {
-                restoredBc.executeBotMove();
-                updateBoardUI();
-                if (!checkGameOver()) {
-                    statusLabel.setText("Partida Reanudada. Turno de " + getPlayerName() + " (" + humanSymbol + ")");
-                }
+                triggerBotTurn();
             }
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Partida Reanudada Exitosamente");
             alert.setHeaderText(null);
-            alert.setContentText("¡Partida de " + data.playerName + " cargada correctamente!\nFichas restauradas en tablero: " + countPieces);
+            alert.setContentText("Partida de " + data.playerName + " cargada correctamente.\nFichas restauradas en tablero: " + countPieces);
             alert.showAndWait();
 
         } catch (Exception ex) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error al Cargar");
-            alert.setHeaderText("No se pudo reanudar la partida");
-            alert.setContentText(ex.getMessage());
-            alert.showAndWait();
+            restartGame();
+            Alert alertError = new Alert(Alert.AlertType.INFORMATION);
+            alertError.setTitle("Reanudar Partida");
+            alertError.setHeaderText(null);
+            alertError.setContentText("No hay partida guardada previa. Se inició una nueva partida vacía.");
+            alertError.showAndWait();
         }
     }
 
@@ -401,5 +614,6 @@ public class ProyectoFX extends Application {
         public boolean isHumanTurn;
         public boolean hasEnded;
         public String[] boardSymbols = new String[9];
+        public List<Integer> moveHistory = new ArrayList<>();
     }
 }

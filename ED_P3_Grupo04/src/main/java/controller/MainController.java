@@ -7,7 +7,6 @@ import com.espol.proyectoestruturadatos.model.board.Symbol;
  * @author Cruz Macias Helen Romina.
  * @author Pincay Salazar Dylan Jeanpier.
  */
-
 public class MainController {
 
     private ChooseController chooseController;
@@ -43,12 +42,17 @@ public class MainController {
         Symbol winner = boardController.getWinner();
         Symbol humanSymbol = chooseController.getHumanSymbol();
         if (winner == null) {
-            return "¡Ha sido un Empate!";
+            return "Ha sido un Empate.";
         } else if (winner.equals(humanSymbol)) {
-            return "¡Felicidades, has Ganado!";
+            return "Felicidades, has Ganado!";
         } else {
-            return "Ha ganado la Computadora. ¡Suerte a la próxima!";
+            return "Ha ganado la Computadora. Suerte a la proxima!";
         }
+    }
+
+    public boolean undoLastTwoMoves() {
+        if (boardController == null) return false;
+        return boardController.undoLastTwoMoves();
     }
 
     public String getFinalResultTitle() {
@@ -58,7 +62,7 @@ public class MainController {
         if (winner == null) {
             return "Empate";
         } else if (winner.equals(humanSymbol)) {
-            return "¡Victoria!";
+            return "Victoria";
         } else {
             return "Derrota";
         }

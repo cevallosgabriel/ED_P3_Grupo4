@@ -2,13 +2,12 @@ package com.espol.proyectoestruturadatos.dstructure;
 
 import com.espol.proyectoestruturadatos.model.board.Board;
 import com.espol.proyectoestruturadatos.model.board.Symbol;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
- * @author Cevallos Guzman Gabriel Abraham.
- * @author Cruz Macias Helen Romina.
- * @author Pincay Salazar Dylan Jeanpier.
+ * @author Gabriel Cevallos, Dylan Jeanpier Pincay Salazar, Helen Cruz
  */
-
 public class Tree<E> {
     private TreeNode<E> root;
 

@@ -4,11 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author Cevallos Guzman Gabriel Abraham.
- * @author Cruz Macias Helen Romina.
- * @author Pincay Salazar Dylan Jeanpier.
+ * @author Gabriel Cevallos, Dylan Jeanpier Pincay Salazar, Helen Cruz
  */
-
 public class TreeNode<E> {
     private E data;
     private TreeNode<E> parent;

@@ -3,11 +3,8 @@ package com.espol.proyectoestruturadatos.model.board;
 import java.util.Objects;
 
 /**
- * @author Cevallos Guzman Gabriel Abraham.
- * @author Cruz Macias Helen Romina.
- * @author Pincay Salazar Dylan Jeanpier.
+ * @author Gabriel Cevallos, Dylan Jeanpier Pincay Salazar, Helen Cruz
  */
-
 public class Symbol {
     private Character character;
     private String color;

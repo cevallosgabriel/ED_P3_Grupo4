@@ -5,11 +5,8 @@ import com.espol.proyectoestruturadatos.model.board.Box;
 import java.util.Iterator;
 
 /**
- * @author Cevallos Guzman Gabriel Abraham.
- * @author Cruz Macias Helen Romina.
- * @author Pincay Salazar Dylan Jeanpier.
+ * @author Gabriel Cevallos, Dylan Jeanpier Pincay Salazar, Helen Cruz
  */
-
 public class IteratorByRow implements Iterator<Box[]> {
 
     private Box[] boxes;

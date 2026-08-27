@@ -3,11 +3,8 @@ package com.espol.proyectoestruturadatos;
 import javafx.application.Application;
 
 /**
- * @author Cevallos Guzman Gabriel Abraham.
- * @author Cruz Macias Helen Romina.
- * @author Pincay Salazar Dylan Jeanpier.
+ * @author Gabriel Cevallos, Dylan Pincay, Helen Cruz
  */
-
 public class ProyectoEstruturaDatos {
 
     public static void main(String[] args) {

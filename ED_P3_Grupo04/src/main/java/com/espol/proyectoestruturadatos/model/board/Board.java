@@ -12,7 +12,6 @@ import java.util.List;
  * @author Cruz Macias Helen Romina.
  * @author Pincay Salazar Dylan Jeanpier.
  */
-
 public class Board {
     public final Box[] boxes = new Box[9];
     private Symbol winner;
@@ -81,6 +80,27 @@ public class Board {
         return false;
     }
 
+    public int[] getWinningLineIndices(Symbol symbol) {
+        if (symbol == null) return null;
+        for (int r = 0; r < 3; r++) {
+            if (checkLineWinner(symbol, new Box[]{boxes[r * 3], boxes[r * 3 + 1], boxes[r * 3 + 2]})) {
+                return new int[]{r * 3, r * 3 + 1, r * 3 + 2};
+            }
+        }
+        for (int c = 0; c < 3; c++) {
+            if (checkLineWinner(symbol, new Box[]{boxes[c], boxes[c + 3], boxes[c + 6]})) {
+                return new int[]{c, c + 3, c + 6};
+            }
+        }
+        if (checkLineWinner(symbol, new Box[]{boxes[0], boxes[4], boxes[8]})) {
+            return new int[]{0, 4, 8};
+        }
+        if (checkLineWinner(symbol, new Box[]{boxes[2], boxes[4], boxes[6]})) {
+            return new int[]{2, 4, 6};
+        }
+        return null;
+    }
+
     private boolean checkLineWinner(Symbol symbol, Box[] subBoxes) {
         int count = 0;
         for (Box box : subBoxes) {
@@ -105,6 +125,14 @@ public class Board {
             if (winnerFound || full) {
                 this.hasEnded = true;
             }
+        }
+    }
+
+    public void clearBox(int arrayIndex) {
+        if (arrayIndex >= 0 && arrayIndex < 9) {
+            boxes[arrayIndex].setSymbol(null);
+            this.winner = null;
+            this.hasEnded = false;
         }
     }
 

@@ -5,11 +5,8 @@ import com.espol.proyectoestruturadatos.model.board.Symbol;
 import java.util.List;
 
 /**
- * @author Cevallos Guzman Gabriel Abraham.
- * @author Cruz Macias Helen Romina.
- * @author Pincay Salazar Dylan Jeanpier.
+ * @author Gabriel Cevallos, Dylan Jeanpier Pincay Salazar, Helen Cruz
  */
-
 public class Minimax {
 
     public static int getBestMove(Board currentBoard, Symbol computerSymbol, Symbol humanSymbol) {
@@ -54,5 +51,31 @@ public class Minimax {
         }
 
         return availableMovesL1.get(0);
+    }
+
+    /**
+     * Calcula y sugiere el movimiento óptimo (con mayor probabilidad de ganar) para el Jugador Humano.
+     */
+    public static int getBestMoveForHuman(Board currentBoard, Symbol humanSymbol, Symbol computerSymbol) {
+        List<Integer> availableMoves = currentBoard.getAvailableMovements();
+        if (availableMoves.isEmpty()) {
+            return -1;
+        }
+
+        int bestMove = -1;
+        int maxUtility = Integer.MIN_VALUE;
+
+        for (int move : availableMoves) {
+            Board tempBoard = new Board(currentBoard);
+            tempBoard.setSymbol(humanSymbol, move);
+
+            int util = tempBoard.calculateUtility(humanSymbol, computerSymbol);
+            if (util > maxUtility) {
+                maxUtility = util;
+                bestMove = move;
+            }
+        }
+
+        return (bestMove != -1) ? bestMove : availableMoves.get(0);
     }
 }

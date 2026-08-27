@@ -4,11 +4,8 @@ import com.espol.proyectoestruturadatos.model.board.Board;
 import com.espol.proyectoestruturadatos.model.board.Symbol;
 
 /**
- * @author Cevallos Guzman Gabriel Abraham.
- * @author Cruz Macias Helen Romina.
- * @author Pincay Salazar Dylan Jeanpier.
+ * @author Gabriel Cevallos, Dylan Jeanpier Pincay Salazar, Helen Cruz
  */
-
 public class Human extends Player {
 
     public Human(Symbol symbol) {
