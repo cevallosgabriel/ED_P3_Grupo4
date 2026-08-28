@@ -4,17 +4,12 @@
 ### Integrates:
 * Gabriel Cevallos
 * Dylan Pincay
-* Helen Cruz 
-
-<table>
-  <tr>
-    <td width="50%">Video1:Distribución de temas</td>
-    <td width="50%"><a href="https://youtube.com">Evidencia 1</a></td>
-  </tr>
-</table>
+* Helen Cruz
 
 # Resultados
 
 ### Salida de [Aplicacion](App)
 
-<img width="180" height="400" alt="WhatsApp Image 2026-08-17 at 3 48 45 PM" src="https://github.com/user-attachments/assets/849b1f84-186f-4107-a835-74e022f83bbf" />
+<div style="display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: center; gap: 40px; align-items: center; width: 100%;">
+  <img width="211" height="400" style="max-width: 45%; height: auto;" alt="image" src="https://github.com/user-attachments/assets/34157f17-298a-40dc-91f7-35494c2224c9"/>
+</div>
